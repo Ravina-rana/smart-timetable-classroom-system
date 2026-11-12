@@ -63,3 +63,13 @@ Academic Mini Project – FY BSc IT.
 
 ## 11. Conclusion
 This project provides an efficient and user-friendly solution for college timetable and classroom management.
+## Project Screenshots
+
+### Home Page
+![Home Page](screenshots/home.png)
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Timetable
+![Timetable](screenshots/timetable.png)

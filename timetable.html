@@ -1,0 +1,437 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Timetable System</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1d4ed8;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        input, button {
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-size: 15px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .stat {
+            background: #dbeafe;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .stat h2 {
+            color: #1d4ed8;
+            margin: 5px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 650px;
+        }
+
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #2563eb;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #eff6ff;
+        }
+
+        .message {
+            font-weight: bold;
+            color: #15803d;
+        }
+
+        @media(max-width: 600px) {
+            .form-grid, .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Smart Timetable System</h1>
+    <p style="text-align:center">
+        Automatic Timetable Generation & Classroom Allocation
+    </p>
+
+    <div class="card">
+        <h2>Add Class Details</h2>
+
+        <div class="form-grid">
+            <input id="batch" placeholder="Batch (e.g. FYBScIT-A)">
+            <input id="subject" placeholder="Subject Name">
+            <input id="teacher" placeholder="Teacher Name">
+            <input id="students" type="number"
+                   placeholder="Number of Students" min="1">
+        </div>
+
+        <button onclick="addClass()">Add Class</button>
+        <button onclick="generateTimetable()">
+            Generate Timetable
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>Dashboard</h2>
+
+        <div class="stats">
+            <div class="stat">
+                <p>Total Classes</p>
+                <h2 id="total">0</h2>
+            </div>
+
+            <div class="stat">
+                <p>Scheduled Classes</p>
+                <h2 id="scheduled">0</h2>
+            </div>
+
+            <div class="stat">
+                <p>Classroom Utilization</p>
+                <h2 id="utilization">0%</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Generated Timetable</h2>
+
+        <p id="message" class="message">
+            Click Generate Timetable to start.
+        </p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Time</th>
+                        <th>Batch</th>
+                        <th>Subject</th>
+                        <th>Teacher</th>
+                        <th>Classroom</th>
+                    </tr>
+                </thead>
+
+                <tbody id="timetable"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+// 1. Days of the week
+const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday"
+];
+
+// 2. Time slots
+const slots = [
+    "9:00 - 10:00",
+    "10:00 - 11:00",
+    "11:15 - 12:15",
+    "12:15 - 1:15",
+    "2:00 - 3:00"
+];
+
+// 3. Available classrooms
+const rooms = [
+    { name: "Room 101", capacity: 60 },
+    { name: "Room 102", capacity: 40 },
+    { name: "Room 103", capacity: 30 }
+];
+
+// 4. Sample class data
+let classes = [
+    {
+        batch: "FYBScIT-A",
+        subject: "Programming in C",
+        teacher: "Mr. Rahul",
+        students: 45
+    },
+    {
+        batch: "FYBScIT-A",
+        subject: "Database Management",
+        teacher: "Ms. Priya",
+        students: 45
+    },
+    {
+        batch: "FYBScIT-A",
+        subject: "Web Development",
+        teacher: "Mr. Amit",
+        students: 45
+    },
+    {
+        batch: "FYBScIT-B",
+        subject: "Programming in C",
+        teacher: "Mr. Rahul",
+        students: 35
+    },
+    {
+        batch: "FYBScIT-B",
+        subject: "Mathematics",
+        teacher: "Ms. Neha",
+        students: 35
+    },
+    {
+        batch: "FYBScIT-B",
+        subject: "Database Management",
+        teacher: "Ms. Priya",
+        students: 35
+    },
+    {
+        batch: "FYBScIT-A",
+        subject: "Mathematics",
+        teacher: "Ms. Neha",
+        students: 45
+    },
+    {
+        batch: "FYBScIT-B",
+        subject: "Web Development",
+        teacher: "Mr. Amit",
+        students: 35
+    }
+];
+
+// 5. Add a new class
+function addClass() {
+
+    const batch = document.getElementById("batch").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+    const teacher = document.getElementById("teacher").value.trim();
+    const students = Number(document.getElementById("students").value);
+
+    if (!batch || !subject || !teacher ||
+        !Number.isInteger(students) || students < 1) {
+
+        alert("Please enter valid details!");
+        return;
+    }
+
+    if (!rooms.some(room => room.capacity >= students)) {
+        alert("No classroom has enough capacity!");
+        return;
+    }
+
+    classes.push({
+        batch,
+        subject,
+        teacher,
+        students
+    });
+
+    alert("Class added successfully!");
+
+    document.getElementById("batch").value = "";
+    document.getElementById("subject").value = "";
+    document.getElementById("teacher").value = "";
+    document.getElementById("students").value = "";
+
+    document.getElementById("total").textContent = classes.length;
+}
+
+// 6. Generate timetable
+function generateTimetable() {
+
+    let schedule = [];
+
+    let occupied = new Set();
+
+    // Check every class
+    for (let cls of classes) {
+
+        let assigned = false;
+
+        // Check available days
+        for (let day of days) {
+
+            if (assigned) break;
+
+            // Check available time slots
+            for (let slot of slots) {
+
+                if (assigned) break;
+
+                // Check available classrooms
+                for (let room of rooms) {
+
+                    // Check classroom capacity
+                    if (room.capacity < cls.students) {
+                        continue;
+                    }
+
+                    // Unique identifiers for conflicts
+                    let batchKey =
+                        "B-" + day + "-" + slot + "-" + cls.batch;
+
+                    let teacherKey =
+                        "T-" + day + "-" + slot + "-" + cls.teacher;
+
+                    let roomKey =
+                        "R-" + day + "-" + slot + "-" + room.name;
+
+                    // Check scheduling conflicts
+                    if (
+                        !occupied.has(batchKey) &&
+                        !occupied.has(teacherKey) &&
+                        !occupied.has(roomKey)
+                    ) {
+
+                        // Reserve the resources
+                        occupied.add(batchKey);
+                        occupied.add(teacherKey);
+                        occupied.add(roomKey);
+
+                        // Save the scheduled class
+                        schedule.push({
+                            day: day,
+                            time: slot,
+                            batch: cls.batch,
+                            subject: cls.subject,
+                            teacher: cls.teacher,
+                            room: room.name
+                        });
+
+                        assigned = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // 7. Display timetable
+    const tbody = document.getElementById("timetable");
+
+    tbody.innerHTML = "";
+
+    schedule.forEach(item => {
+
+        let row = document.createElement("tr");
+
+        [
+            item.day,
+            item.time,
+            item.batch,
+            item.subject,
+            item.teacher,
+            item.room
+        ].forEach(value => {
+
+            let cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+
+        });
+
+        tbody.appendChild(row);
+    });
+
+    // 8. Calculate dashboard statistics
+    document.getElementById("total").textContent =
+        classes.length;
+
+    document.getElementById("scheduled").textContent =
+        schedule.length;
+
+    const totalRoomSlots = rooms.length * days.length * slots.length;
+
+    const utilization = (
+        schedule.length / totalRoomSlots
+    ) * 100;
+
+    document.getElementById("utilization").textContent =
+        utilization.toFixed(1) + "%";
+
+    // 9. Show result message
+    const unscheduled = classes.length - schedule.length;
+
+    document.getElementById("message").textContent =
+        unscheduled === 0
+        ? "Success! All classes scheduled without conflicts."
+        : unscheduled + " class(es) could not be scheduled. Please check available resources.";
+
+}
+
+// Show initial class count
+document.getElementById("total").textContent = classes.length;
+
+</script>
+
+</body>
+</html>
